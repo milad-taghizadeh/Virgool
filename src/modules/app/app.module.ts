@@ -6,6 +6,7 @@ import { DatabaseModule } from '../../database/database.module';
 import { LoggerMiddleware } from '../../common/utils/logger';
 import { CustomConfigModule } from '../config/config.module';
 import { UserModule } from '../user/user.module';
+import { AuthModule } from '../auth/auth.module';
 import { join } from 'path';
 
 @Module({
@@ -18,6 +19,7 @@ import { join } from 'path';
     DatabaseModule,
     CustomConfigModule,
     AppModule,
+    AuthModule,
     UserModule,
   ],
   controllers: [AppController],
