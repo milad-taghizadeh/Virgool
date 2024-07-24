@@ -1,0 +1,179 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Student {
+  id              String   @id @default(uuid())
+  firstName       String   @map("first_name")
+  lastName        String   @map("last_name")
+  address         String
+  gender          Gender
+  email           String   @unique
+  phone           Int      @unique
+  isPhoneVerified Boolean  @default(false)
+  birthDate       String   @map("birth_date")
+  courses         Course[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  Otp             Otp[]
+}
+
+model Teacher {
+  id              String         @id @default(uuid())
+  firstName       String         @map("first_name")
+  lastName        String         @map("last_name")
+  address         String
+  gender          Gender
+  teachingType    TeachingType   @default(OFFILINE) @map("teaching_type")
+  email           String         @unique
+  phone           Int            @unique
+  isPhoneVerified Boolean        @default(false)
+  birthDate       String         @map("birth_date")
+  city            String
+  aboutTeacher    String         @map("about_teacher")
+  Verification    Verification
+  courses         Course[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  Category        Category?      @relation(fields: [categoryId], references: [id])
+  categoryId      String?
+  Grade           Grade?         @relation(fields: [gradeId], references: [id])
+  gradeId         String?
+  Lesson          Lesson?        @relation(fields: [lessonId], references: [id])
+  lessonId        String?
+  CorseRequest    CorseRequest[]
+}
+
+model Otp {
+  id        String   @id @default(uuid())
+  owner     Student  @relation(fields: [studentId], references: [id])
+  studentId String
+  code      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  expiresAt DateTime @db.Timestamp(5)
+}
+
+model Course {
+  id              String       @id @default(uuid())
+  courseName      String       @map("course_name")
+  courseNumber    Int          @unique @map("course_number")
+  courseTimeStart String       @map("course_time_start")
+  teachingType    TeachingType @default(OFFILINE) @map("teaching_type")
+  courseTimeEnd   String       @map("course_time_end")
+  courseStatus    CourseStatus @default(WAITING_FOR_START) @map("course_status")
+  Teacher         Teacher?     @relation(fields: [teacherId], references: [id])
+  teacherId       String?
+  Student         Student?     @relation(fields: [studentId], references: [id])
+  studentId       String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+model CorseRequest {
+  id                     String           @id @default(uuid())
+  city                   String
+  reqTeacherGender       ReqTeacherGender @default(ALL) @map("req_teacher_gender")
+  reqTeacherVerification ReqTeacherVerif  @default(ALL) @map("req_teacher_verification")
+  corsReqStatus          CourseReqStatus  @default(PENDING) @map("cors_req_status")
+  teachingType           TeachingType     @default(OFFILINE) @map("teaching_type")
+  category               Category         @relation(fields: [categoryId], references: [id])
+  grade                  Grade            @relation(fields: [gradeId], references: [id])
+  lesson                 Lesson           @relation(fields: [lessonId], references: [id])
+  teacher                Teacher          @relation(fields: [teacherId], references: [id])
+  categoryId             String
+  gradeId                String
+  lessonId               String
+  teacherId              String
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+}
+
+model Category {
+  id           String         @id @default(uuid())
+  categoryName String         @map("category_name")
+  teachers     Teacher[]
+  CorseRequest CorseRequest[]
+  Grade        Grade?         @relation(fields: [gradeId], references: [id])
+  Lesson       Lesson?        @relation(fields: [lessonId], references: [id])
+  gradeId      String?
+  lessonId     String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model Grade {
+  id           String         @id @default(uuid())
+  gradeName    String         @map("grade_name")
+  category     Category[]
+  teachers     Teacher[]
+  Lesson       Lesson?        @relation(fields: [lessonId], references: [id])
+  lessonId     String?
+  CorseRequest CorseRequest[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model Lesson {
+  id           String         @id @default(uuid())
+  lessonName   String         @map("lesson_name")
+  category     Category[]
+  grade        Grade[]
+  teachers     Teacher[]
+  CorseRequest CorseRequest[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum ReqTeacherGender {
+  MALE
+  FEMALE
+  ALL
+}
+
+enum Verification {
+  BLUE
+  GOLD
+  NONE
+}
+
+enum ReqTeacherVerif {
+  BLUE
+  GOLD
+  NONE
+  ALL
+}
+
+enum CourseStatus {
+  WAITING_FOR_START
+  STARTED
+  FINISHED
+}
+
+enum TeachingType {
+  ONLINE
+  OFFILINE
+  ALL
+}
+
+enum CourseReqStatus {
+  ACCEPTED
+  DENIED
+  PENDING
+}
