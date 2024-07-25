@@ -8,6 +8,7 @@ import { CustomConfigModule } from '../config/config.module';
 import { UserModule } from '../user/user.module';
 import { AuthModule } from '../auth/auth.module';
 import { join } from 'path';
+import { PrismaService } from 'src/database/database.service';
 
 @Module({
   imports: [

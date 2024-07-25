@@ -28,17 +28,18 @@ model User {
   password         String
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+  Otp              Otp[]
 }
 
-// model Otp {
-//   id        String   @id @default(uuid())
-//   owner     Student  @relation(fields: [studentId], references: [id])
-//   studentId String
-//   code      String
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-//   expiresAt DateTime @db.Timestamp(5)
-// }
+model Otp {
+  id        String   @id @default(uuid())
+  owner     User     @relation(fields: [userId], references: [id])
+  userId    String
+  code      String
+  expiresIn DateTime @map("expiresIn") @db.Timestamp(5)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
 
 enum Gender {
   MALE
