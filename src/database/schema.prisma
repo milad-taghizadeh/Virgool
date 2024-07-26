@@ -15,17 +15,17 @@ datasource db {
 
 model User {
   id               String   @id @default(uuid())
-  username         String   @map("username")
-  nick_name        String   @map("nick_name")
-  gender           String
-  bio              String
-  image_profile    String
-  bg_image         String
-  birthday         String
-  linkedin_profile String
-  email            String   @unique
-  phone            String   @unique
-  password         String
+  username         String?  @map("username")
+  nick_name        String?  @map("nick_name")
+  bio              String?
+  gender           String?
+  image_profile    String?
+  bg_image         String?
+  birthday         String?
+  linkedin_profile String?
+  email            String?  @unique
+  phone            String?  @unique
+  password         String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   Otp              Otp[]
