@@ -10,19 +10,34 @@ import { AuthMethod } from './enums/method.enum';
 import { isEmail, isPhoneNumber } from 'class-validator';
 import { PrismaService } from 'src/database/database.service';
 import { User } from '@prisma/client';
-import { AuthMessage, BadRequestMessage } from 'src/common/enums/message.enum';
+import {
+  AuthMessage,
+  BadRequestMessage,
+  PublicMessage,
+} from 'src/common/enums/message.enum';
 import { randomInt } from 'crypto';
+import { JwtService } from '@nestjs/jwt';
+import { TokenService } from './token.service';
+import { Response } from 'express';
+import { CookieKeys } from 'src/common/enums/cookie.enum';
+import { AuthResponse } from './types/response';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly databaseService: PrismaService) {}
-  userExistence(authDto: AuthDto) {
+  constructor(
+    private readonly databaseService: PrismaService,
+    private tokenService: TokenService,
+  ) {}
+  async userExistence(authDto: AuthDto, res: Response) {
     const { method, type, username } = authDto;
+    let result: AuthResponse;
     switch (type) {
       case AuthType.Login:
-        return this.login(method, username);
+        result = await this.login(method, username);
+        return this.sendResponse(res, result);
       case AuthType.Register:
-        return this.register(method, username);
+        result = await this.register(method, username);
+        return this.sendResponse(res, result);
       default:
         throw new UnauthorizedException();
     }
@@ -34,7 +49,8 @@ export class AuthService {
     if (!user) throw new UnauthorizedException(AuthMessage.NotFoundAccount);
     const otp = await this.saveOtp(user.id);
     otp.userId = user.id;
-    return { code: otp.code };
+    const token = this.tokenService.createOtpToken({ UserId: user.id });
+    return { code: otp.code, token };
   }
 
   async register(method: AuthMethod, username: string) {
@@ -50,7 +66,14 @@ export class AuthService {
     });
     const otp = await this.saveOtp(user.id);
     otp.userId = user.id;
-    return { code: otp.code };
+    const token = this.tokenService.createOtpToken({ UserId: user.id });
+    return { code: otp.code, token };
+  }
+
+  async sendResponse(res: Response, result: AuthResponse) {
+    const { token, code } = result;
+    res.cookie(CookieKeys.OTP, token, { httpOnly: true });
+    res.json({ message: PublicMessage.SentOtp, code });
   }
 
   async saveOtp(userId: string) {
