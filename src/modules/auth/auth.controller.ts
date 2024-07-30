@@ -9,7 +9,7 @@ import {
   Res,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthDto } from './dto/auth.dto';
+import { AuthDto, CheckOtpDto } from './dto/auth.dto';
 import { ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { SwaggerConsumes } from 'src/common/enums/swagger.consumes.enum';
 import { Response } from 'express';
@@ -24,5 +24,11 @@ export class AuthController {
   @ApiConsumes(SwaggerConsumes.urlEncoded, SwaggerConsumes.Json)
   userExistence(@Body() authDto: AuthDto, @Res() res: Response) {
     return this.authService.userExistence(authDto, res);
+  }
+
+  @Post('check-otp')
+  @ApiConsumes(SwaggerConsumes.urlEncoded, SwaggerConsumes.Json)
+  checkOtp(@Body() checkOtpDto: CheckOtpDto) {
+    return this.authService.checkOtp(checkOtpDto.code);
   }
 }

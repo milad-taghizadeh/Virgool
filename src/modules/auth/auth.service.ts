@@ -1,7 +1,9 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
+  Scope,
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthDto } from './dto/auth.dto';
@@ -18,15 +20,17 @@ import {
 import { randomInt } from 'crypto';
 import { JwtService } from '@nestjs/jwt';
 import { TokenService } from './token.service';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { CookieKeys } from 'src/common/enums/cookie.enum';
 import { AuthResponse } from './types/response';
+import { REQUEST } from '@nestjs/core';
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class AuthService {
   constructor(
     private readonly databaseService: PrismaService,
     private tokenService: TokenService,
+    @Inject(REQUEST) private request: Request,
   ) {}
   async userExistence(authDto: AuthDto, res: Response) {
     const { method, type, username } = authDto;
@@ -72,7 +76,10 @@ export class AuthService {
 
   async sendResponse(res: Response, result: AuthResponse) {
     const { token, code } = result;
-    res.cookie(CookieKeys.OTP, token, { httpOnly: true });
+    res.cookie(CookieKeys.OTP, token, {
+      httpOnly: true,
+      expires: new Date(Date.now() + 1000 * 60 * 2),
+    });
     res.json({ message: PublicMessage.SentOtp, code });
   }
 
@@ -92,7 +99,14 @@ export class AuthService {
     return otp;
   }
 
-  async checkOtp() {}
+  async checkOtp(code: string) {
+    const token = this.request.cookies?.[CookieKeys.OTP];
+    console.log(token);
+    if (!token) {
+      throw new UnauthorizedException(AuthMessage.ExpiredCode);
+    }
+    return token;
+  }
 
   async checkExistUser(method: AuthMethod, username: string) {
     let user: User;
